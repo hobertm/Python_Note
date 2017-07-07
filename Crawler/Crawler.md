@@ -18,7 +18,7 @@ else:
 默认参数
 ```py
 def hello(who = 'world'): 
-    print('hello %s!' % (who))
+    print('hello %s!' % (who)) #python 格式化输出
 
 hello()
 hello('sea')
