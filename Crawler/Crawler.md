@@ -1,8 +1,9 @@
 # Crawler  
-
-- 循环，判断  
+### python  
+循环，判断  
 for循环只能遍历容器  
-没有switch，别忘了后面有冒号  
+没有switch
+if语句最后要加冒号  
 ```py
 score = 80
 if score > 90:
@@ -38,8 +39,10 @@ def f(gf, x, y):
 print(f(lambda x, y: x * y, 100, 200))
 ```
 list的用法  
+range包含头不含尾  
+合并数组要用extend  
 ```py
-li = [1, 2, 3, 4, 5]
+li = [1, 2, 3, 4, 5] 
 # 遍历
 for i in li:
     # print(i)
@@ -90,13 +93,257 @@ li.sort()
 print(li)
 # lambda帮助排序
 li = [[5, 2], [3, 8], [2, 11], [7, 6]]
-# li.sort(key = lambda x: x[0]) # 参数名字
+# li.sort(key = lambda x: x[0]) # 按照第一个元素排序
 # 与lamda等价写法
 def item_key(x):
     return x[0]
 li.sort(key = item_key)
 print(li)
 ```
+字典  
+```py
+di = {'k1': 'v1', 'k2': 'v2'}
+di['k3'] = 'v3'
+di['k4'] = 'v4'
+
+for k in di:
+    print(di[k])
+
+for k, v in di.items():
+    print(k, v)
+```
+list切片  
+```py
+# [1, 2, 3, 4, 5]
+#  => [1, 2, 3]
+#  => [3, 4]
+li = [1, 2, 3, 4, 5]
+li_0_2 =li[0:3] # 0 <= ? < 3
+# 等价li[:3]
+print(li_0_2)
+# [start, end, step] => [start, start + step, ..., < end]
+# start默认是0，end默认-1，step默认1
+li_last_3 = li[-1:-4:-1]
+print(li_last_3)
+
+# 直接用切片反转数组
+print(li[::-1])
+print(li[-2::-1])
+
+# 切片是复制，原来的list不会变
+li_0_2[-1] = 100
+print(li)
+
+```
+字符串  
+```py
+s = 'abcdefg'
+try:
+    str[0] = 'x'
+except Exception as e:
+    print(e)
+
+# 修改字符串
+li = list(s)
+# print(li)
+li[0] = 'x'
+s = ''.join(li)
+print(s)
+s = '-'.join(li)
+print(s)
+
+# 切割
+s = 'abc,def,ghi'
+p1, p2, p3 = s.split(',')
+print(p1, p2, p3)
+
+# 下标访问和切片
+s = 'abcdefg'
+print(s[0], s[-1])
+print(s[2:5])
+```
+对象  
+```py
+# 用type查看对象类型
+print(type([1, 2, 3, 4]))
+print(type('abcd'))
+print(type({1:2, 2:3}))
+
+# 用dir查看属性和方法
+print(dir(list))
+
+
+class Clazz(object):
+    # self参考C++的this指针！
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        
+    # 声明成员函数的时候，第一个参数一定是self，不要忘记！
+    def display(self):
+        print(self.x, self.y)
+
+print(type(Clazz))
+clz = Clazz(100, 200)
+clz.display()  # => display(clz)
+
+
+class Base:
+    def run(self):
+        print('Base::run')
+
+class Tom(Base):
+    def run(self):
+        print('Tom::run')
+
+t = Tom()
+print(isinstance(t, Base))
+t.run()
+
+def run(runner):
+    runner.run()
+
+class R1:
+    def run(self):
+        print('R1::run')
+
+class R2:
+    def run(self):
+        print('R2::run')
+
+run(R1())
+run(R2())
+```
+file，with open就不用try exception  
+```py
+with open('text.txt') as f:
+    for line in f.readlines():
+        print(line)
+
+with open('text.txt', 'rb') as f:
+    print(f.read())
+
+s = 'abcdefg'
+b = bytes(s)
+print(b)
+```
+异常处理
+```py
+try:
+    r = 10 / 0
+except ZeroDivisionError as e:
+    print(type(e))
+    print(e)
+finally:
+    # 主要防止资源泄露！
+    print('Always come here.')
+```
+多线程  
+```py
+import threading
+
+def thread_func(x):
+    # 自己加sleep和其它复杂操作看效果
+    print('%d\n' % (x * 100))
+
+threads = []
+for i in range(5):
+    threads.append(threading.Thread(target = thread_func, args = (100, )))
+
+for thread in threads:
+    thread.start()
+
+for thread in threads:
+    thread.join()
+```
+json  字典转字符串  
+```py
+import json
+
+obj = {'one': '一', 'two': '二'}
+encoded = json.dumps(obj)
+print(type(encoded))
+print(encoded)
+decoded = json.loads(encoded)
+print(type(decoded))
+print(decoded)
+```
+xml解析，dom和sax  
+```py
+#dom
+from xml.dom import minidom
+
+doc = minidom.parse('book.xml')
+root = doc.documentElement
+# print(dir(root))
+print(root.nodeName)
+books = root.getElementsByTagName('book')
+print(type(books))
+for book in books:
+    titles = book.getElementsByTagName('title')
+    print(titles[0].childNodes[0].nodeValue)
+```
+```py
+#sax
+import string
+from xml.parsers.expat import ParserCreate
+
+
+class DefaultSaxHandler(object):
+    def start_element(self, name, attrs):
+        self.element = name
+        print('element: %s, attrs: %s' % (name, str(attrs)))
+
+    def end_element(self, name):
+        print('end element: %s' % name)
+
+    def char_data(self, text):
+        if text.strip():
+            print("%s's text is %s" % (self.element, text))
+
+handler = DefaultSaxHandler()
+parser = ParserCreate()
+parser.StartElementHandler = handler.start_element
+parser.EndElementHandler = handler.end_element
+parser.CharacterDataHandler = handler.char_data
+with open('book.xml', 'r') as f:
+    parser.Parse(f.read())
+
+```
+爬17huo网站
+```py
+from selenium import webdriver
+import time
+
+browser = webdriver.Chrome()
+browser.set_page_load_timeout(30)
+browser.get('http://www.17huo.com/search.html?sq=2&keyword=%E7%BE%8A%E6%AF%9B')
+page_info = browser.find_element_by_css_selector('body > div.wrap > div.pagem.product_list_pager > div')
+# print(page_info.text)
+pages = int((page_info.text.split('，')[0]).split(' ')[1])
+for page in range(pages):
+    if page > 2:
+        break
+    url = 'http://www.17huo.com/?mod=search&sq=2&keyword=%E7%BE%8A%E6%AF%9B&page=' + str(page + 1)
+    browser.get(url)
+    browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(3)   # 不然会load不完整
+    goods = browser.find_element_by_css_selector('body > div.wrap > div:nth-child(2) > div.p_main > ul').find_elements_by_tag_name('li')
+    print('%d页有%d件商品' % ((page + 1), len(goods)))
+    for good in goods:
+        try:
+            title = good.find_element_by_css_selector('a:nth-child(1) > p:nth-child(2)').text
+            price = good.find_element_by_css_selector('div > a > span').text
+            print(title, price)
+        except:
+            print(good.text)
+```
+
+
+
+
+
+
 - 爬虫工作流程  
 将种子URL放入队列  
 从队列中获取URL，抓取内容  
