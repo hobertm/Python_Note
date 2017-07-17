@@ -1,15 +1,54 @@
 # Crawler  
 
-- 爬虫工作流程  
-将种子URL放入队列  
-从队列中获取URL，抓取内容  
-解析抓取内容，将需要进一步抓取的URL放入工作队列，存储解析后的内容  
+- OSI七层  
+物理层：电器连接  
+数据链路层：交换机，STP，帧中继  
+网络层：路由器，IP协议  
+传输层：TCP、UDP协议  
+会话层：建立通信连接，网络拨号  
+表示层：每次连接只处理一个请求  
+应用层：HTTP、FTP  
 
-- 抓取策略  
-深度优先  
-广度优先  
-PageRank  
-大站优先策略  
+- REQUEST 部分的 HTTP HEADER  
+**Accept: text/plain**  
+**Accept-Charset: utf-8**  
+**Accept-Encoding: gzip, deflate**  
+Accept-Language: en-US  
+**Connection: keep-alive**  
+Content-Length: 348  
+Content-Type: application/x-www-form-urlencoded  
+Date: Tue, 15 Nov 1994 08:12:31 GMT  
+Host: en.wikipedia.org:80  
+**User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0**  
+**Cookie: $Version=1; Skin=new;**  
+
+- GET,POST对比  
+GET的request没有body部分  
+GET是idempotent幂等的，几次请求结果相同  
+
+- HTTP 响应状态码  
+3XX一般urllib2已经对重定向做了处理  
+400 Bad Request客户端请求有语法错误，不能被服务器所理解  
+401 Unauthorized 请求未经授权，这个状态代码必须和WWW-Authenticate报头域一起使用  
+403 Forbidden服务器收到请求，但是拒绝提供服务  
+404 Not Found请求资源不存在，eg：输入了错误的URL  
+500 Internal Server Error 服务器发生不可预期的错误  
+503 Server Unavailable服务器当前不能处理客户端的请求，一段时间后可能恢复正常  
+解决方法  
+400 Bad Request检查请求的参数或者路径  
+401 Unauthorized 如果需要授权的网页，尝试重新登录  
+403 Forbidden  
+如果是需要登录的网站，尝试重新登录  
+IP被封，暂停爬取，并增加爬虫的等待时间，如果拨号网络，尝试重新联网更改IP  
+404 Not Found直接丢弃  
+5XX服务器错误，直接丢弃，并计数，如果连续不成功，WARNING 并停止爬取  
+
+- 选择策略  
+重要的网页距离种子站点比较近  
+万维网的深度并没有很深，一个网页有很多路径可以到达  
+宽度优先有利于多爬虫并行合作抓取  
+深度限制与宽度优先相结合  
+
 
 ```python
 # coding:utf-8
@@ -59,7 +98,9 @@ def get_province_entry(url):
 provinces = get_province_entry('http://www.ip138.com/post')
 print(provinces)
 ```  
+
 xml解析，dom和sax  
+
 ```py
 #dom
 from xml.dom import minidom
@@ -101,18 +142,15 @@ with open('book.xml', 'r') as f:
     parser.Parse(f.read())
 
 ```
-爬17huo网站
+selenium爬购物网站
 ```py
 # coding:utf-8
 from selenium import webdriver
 import time
-import os
 
-iedriver = "C:\Program Files\Internet Explorer\IEDriverServer.exe"
-os.environ["webdriver.ie.driver"] = iedriver
-browser = webdriver.Ie(iedriver)
+browser = webdriver.Firefox()
 browser.set_page_load_timeout(30)
-browser.get('http://www.17huo.com/search.html?sq=2&keyword=%E7%BE%8A%E6%AF%9B')
+browser.get('http://www.17huo.com/search.html?sq=0&keyword=%E5%A4%A7%E8%A1%A3')
 # 复制css选择器
 page_info = browser.find_element_by_css_selector('body > div.wrap > div.pagem.product_list_pager > div')
 # print(page_info.text) 打印有多少页，每页有多少个
@@ -120,7 +158,7 @@ pages = int((page_info.text.split('，')[0]).split(' ')[1])
 for page in range(pages):
     if page > 2:  # 只抓前三页
         break
-    url = 'http://www.17huo.com/?mod=search&sq=2&keyword=%E7%BE%8A%E6%AF%9B&page=' + str(page + 1)
+    url = 'http://www.17huo.com/?mod=search&sq=2&keyword=大衣&page=' + str(page + 1)
     browser.get(url)
     # 拖动滚动条加载商品
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -149,17 +187,17 @@ from io import BytesIO
 # print(dir(requests))
 
 url = 'http://www.baidu.com'
-r = requests.get(url)
+r = requests.get(url)  #发送请求，返回响应
 print(r.text)
 print(r.status_code)
 print(r.encoding)
 
 # 传递参数：拼接参数
 params = {'k1':'v1', 'k2':'v2'}
-r = requests.get('http://httpbin.org/get', params)
+r = requests.get('http://httpbin.org/get', params) #发送请求时拼接
 print(r.url)
 
-# 二进制数据
+# 二进制数据，保存图片
 r = requests.get('图片地址')
 image = Image.open(BytesIO(r.content)) 
 image.save('图片.jpg')
@@ -210,16 +248,16 @@ soup = BeautifulSoup(open('test.html'))
 # print(soup.prettify())
 
 # Tag
-print(type(soup.title))
+print(type(soup.title)) #类型是tag
 print(soup.title.name)
 print(soup.title)
 
 # String
-print(type(soup.title.string))
+print(type(soup.title.string))#NavigableString
 print(soup.title.string)
 
 # Comment
-print(type(soup.a.string))
+print(type(soup.a.string))#Comment
 print(soup.a.string)
 
 for item in soup.body.contents:
@@ -230,7 +268,7 @@ print(soup.select('.sister'))
 print(soup.select('#link1'))
 print(soup.select('head > title'))
 
-a_s = soup.select('a')
+a_s = soup.select('a')  #soup.a 只会返回一个，select返回所有
 for a in a_s:
     print(a)
 
@@ -238,7 +276,7 @@ for a in a_s:
 HTMLParser
 ```py
 from HTMLParser import HTMLParser
-# markupbase
+# markupbase 需要放到site-packages
 
 class MyParser(HTMLParser):
     def handle_decl(self, decl):
@@ -275,7 +313,41 @@ demo.close()
 
 ```
 
+```py
+import requests
+import html5lib
+import re
+from bs4 import BeautifulSoup
 
+
+s = requests.Session()
+url_login = 'http://accounts.douban.com/login'
+
+formdata = {
+    'redir':'https://www.douban.com',
+    'form_email': 't.t.panda@hotmail.com',
+    'form_password': 'tp65536!',
+    'login': u'登陆'
+}
+headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36'}
+
+r = s.post(url_login, data = formdata, headers = headers)
+content = r.text
+soup = BeautifulSoup(content, 'html5lib')
+captcha = soup.find('img', id = 'captcha_image')
+if captcha:
+    captcha_url = captcha['src']
+    re_captcha_id = r'<input type="hidden" name="captcha-id" value="(.*?)"/'
+    captcha_id = re.findall(re_captcha_id, content)
+    print(captcha_id)
+    print(captcha_url)
+    captcha_text = input('Please input the captcha:')
+    formdata['captcha-solution'] = captcha_text
+    formdata['captcha-id'] = captcha_id
+    r = s.post(url_login, data = formdata, headers = headers)
+with open('contacts.txt', 'w+', encoding = 'utf-8') as f:
+    f.write(r.text)
+```
 
 
 
