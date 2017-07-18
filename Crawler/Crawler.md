@@ -312,7 +312,7 @@ demo.feed(open('test.html').read())
 demo.close()
 
 ```
-
+宽度优先  
 ```py
 import requests
 import html5lib
