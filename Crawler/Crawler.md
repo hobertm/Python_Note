@@ -49,8 +49,28 @@ IP被封，暂停爬取，并增加爬虫的等待时间，如果拨号网络，
 宽度优先有利于多爬虫并行合作抓取  
 深度限制与宽度优先相结合  
 
+- 如何记录抓取历史？  
+1.将访问过的URL保存到数据库效率太低  
+2.用HashSet将访问过的URL保存起来。那只需接近O(1)的代价就可以查到一个URL是否被访问过了。消耗内存  
+3.URL经过MD5或SHA-1等单向哈希后再保存到HashSet或数据库。  
+4.Bit-Map方法。建立一个BitSet，将每个URL经过一个哈希函数映射到某一位。  
 
-```python
+- Bloom Filter  
+Bloom Filter使用了多个哈希函数，而不是一个。  
+创建一个m位BitSet，先将所有位初始化为0，然后选择k个不同的哈希函数。  
+第i个哈希函数对字符串str哈希的结果记为h（i，str），且h（i，str）的范围是0到m-1。  
+只能插入，不能删除！  
+
+- 网页的关键内容  
+Title 网页的标题  
+Content Title正文的标题  
+Content 正文部分  
+Anchor 内部的锚点  
+Link 外部链接  
+
+
+
+```py
 # coding:utf-8
 import requests
 import xml.etree.ElementTree as ET
@@ -312,7 +332,7 @@ demo.feed(open('test.html').read())
 demo.close()
 
 ```
-宽度优先  
+豆瓣电影  
 ```py
 import requests
 import html5lib
@@ -348,7 +368,7 @@ if captcha:
 with open('contacts.txt', 'w+', encoding = 'utf-8') as f:
     f.write(r.text)
 ```
-
+宽度优先爬取马蜂窝
 ```py
 import urllib2
 from collections import deque
@@ -483,8 +503,94 @@ crawler = CrawlBSF("http://www.mafengwo.cn")
 crawler.start_crawl()
 
 ```
+爬取马蜂窝游记
+```py
+# coding=utf-8
+
+import os
+import re
+import httplib
+import urllib2
+from pybloom import BloomFilter
 
 
+request_headers = {
+    'host': "www.mafengwo.cn",
+    'connection': "keep-alive",
+    'cache-control': "no-cache",
+    'upgrade-insecure-requests': "1",
+    'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36",
+    'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    'accept-language': "zh-CN,en-US;q=0.8,en;q=0.6"
+}
+
+city_home_pages = []
+city_ids = []
+dirname = 'mafengwo_notes/'
+
+# 创建 Bloom Filter
+download_bf = BloomFilter(1024 * 1024 * 16, 0.01)
+
+
+def download_city_notes(id):
+    for i in range(1, 999):
+        url = 'http://www.mafengwo.cn/yj/%s/1-0-%d.html' % (id, i)
+        if url in download_bf:
+            continue
+        print(('open url %s' % url))
+        download_bf.add(url)
+        req = urllib2.Request(url, headers=request_headers)
+        response = urllib2.urlopen(req)
+        htmlcontent = response.read()
+        city_notes = re.findall('href="/i/\d{7}.html', htmlcontent)
+
+        # 如果导航页错误，该页的游记数为0，则意味着 1-0-xxx.html 已经遍历完，结束这个城市
+        if len(city_notes) == 0:
+            return
+        for city_note in city_notes:
+            try:
+                city_url = 'http://www.mafengwo.cn%s' % (city_note[6:])
+                if city_url in download_bf:
+                    continue
+                print('download %s' % (city_url))
+                req = urllib2.Request(city_url, headers=request_headers)
+                response = urllib2.urlopen(req)
+                html = response.read()
+                filename = city_url[7:].replace('/', '_')
+                fo = open("%s%s" % (dirname, filename), 'wb+')
+                fo.write(html)
+                fo.close()
+                download_bf.add(city_url)
+            except Exception as Arguments:
+                print(Arguments)
+                continue
+
+
+# 检查用于存储网页文件夹是否存在，不存在则创建
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+
+try:
+    # 下载目的地的首页
+    req = urllib2.Request('http://www.mafengwo.cn/mdd/', headers=request_headers)
+    response = urllib2.urlopen(req)
+    htmlcontent = response.read()
+
+    # 利用正则表达式，找出所有的城市主页
+    city_home_pages = re.findall('/travel-scenic-spot/mafengwo/\d{5}.html', htmlcontent)
+
+    # 通过循环，依次下载每个城市下的所有游记
+    for city in city_home_pages:
+        city_ids.append(city[29:34])
+        download_city_notes(city[29:34])
+except urllib2.HTTPError as Arguments:
+    print(Arguments)
+except httplib.BadStatusLine:
+    print('BadStatusLine')
+except Exception as Arguments:
+    print(Arguments)
+
+```
 
 
 
