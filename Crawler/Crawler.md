@@ -67,8 +67,21 @@ Content Title正文的标题
 Content 正文部分  
 Anchor 内部的锚点  
 Link 外部链接  
+ 
+- 实现一个多线程爬虫  
+1.创建一个线程池threads = []  
+2.确认url队列线程安全Queue Deque  
+3.从队列取出url，分配一个线程开始爬取pop()/get() threading.Thread  
+4.如果线程池满了，循环等待，直到有线程结束t.is_alive()  
+5.从线程池移除已经完成下载的线程threads.remove(t)  
+6.如果当前级别的url已经遍历完成，t.join()函数等待所有现场结束，然后开始下一级别的爬取  
 
-
+- 多进程爬虫评估  
+目的：控制线程数量对线程进行隔离，减少资源竞争  
+某些环境下，在单机上利用多个IP来伪装局限性：  
+不能突破网络瓶颈  
+单机单IP的情况下，变得没有意义  
+数据交换的代价更大  
 
 ```py
 # coding:utf-8
@@ -330,6 +343,83 @@ class MyParser(HTMLParser):
 demo = MyParser()
 demo.feed(open('test.html').read())
 demo.close()
+
+```
+lxml,DOM选择器
+```py
+# coding:utf-8
+import lxml
+from lxml import html
+from lxml import etree
+
+from bs4 import BeautifulSoup
+
+with open('jd.com_2131674.html', 'r', -1, 'utf-8', 'ignore') as f:
+    content = f.read()
+tree = etree.HTML(content)
+
+print('--------------------------------------------')
+print('# different quote //*[@class="p-price J-p-2131674"')
+print('--------------------------------------------')
+print(tree.xpath("//*[@class='p-price J-p-2131674']"))  # *指所有标签
+print('')
+
+print('--------------------------------------------')
+print('# partial match ' + "//*[@class='J-p-2131674']")
+print('--------------------------------------------')
+print(tree.xpath("//*[@class='J-p-2131674']"))
+print('')
+
+print('--------------------------------------------')
+print('# exactly match class string ' + '//*[@class="p-price J-p-2131674"]')
+print('--------------------------------------------')
+print(tree.xpath('//*[@class="p-price J-p-2131674"]'))
+print('')
+
+print('--------------------------------------------')
+print('# use contain ' + "//*[contains(@class, 'J-p-2131674')]")
+print('--------------------------------------------')
+print(tree.xpath("//*[contains(@class, 'J-p-2131674')]"))
+print('')
+
+print('--------------------------------------------')
+print('# specify tag name ' + "//strong[contains(@class, 'J-p-2131674')]")
+print('--------------------------------------------')
+print(tree.xpath("//strong[contains(@class, 'J-p-2131674')]"))  # 在strong标签中查找
+print('')
+
+print('--------------------------------------------')
+print('# css selector with tag' + "cssselect('strong.J-p-2131674')")
+print('--------------------------------------------')
+htree = lxml.html.fromstring(content)
+print(htree.cssselect('strong.J-p-2131674'))
+print('')
+
+print('--------------------------------------------')
+print('# css selector without tag, partial match' + "cssselect('.J-p-2131674')")
+print('--------------------------------------------')
+htree = lxml.html.fromstring(content)
+elements = htree.cssselect('.J-p-2131674')
+print(elements)
+print('')
+
+print('--------------------------------------------')
+print('# attrib and text')
+print('--------------------------------------------')
+for element in tree.xpath("//strong[contains(@class, 'J-p-2131674')]"):
+    print(element.text)
+    print(element.attrib)
+print('')
+
+print('--------------------------------------------')
+print('########## use BeautifulSoup ##############')
+print('--------------------------------------------')
+print('# loading content to BeautifulSoup')
+soup = BeautifulSoup(content, 'html.parser')
+print('# loaded, show result')
+print(soup.find(attrs={'class': 'J-p-2131674'}).text)
+
+f.close()
 
 ```
 豆瓣电影  
