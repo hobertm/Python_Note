@@ -83,6 +83,54 @@ Link 外部链接
 单机单IP的情况下，变得没有意义  
 数据交换的代价更大  
 
+- 分布式爬虫的重要性   
+解决目标地址对IP访问频率的限制  
+利用更高的带宽，提高下载速度  
+大规模系统的分布式存储和备份  
+数据的扩展能力  
+
+- 将多进程爬虫部署到多台主机上  
+将数据库地址配置到统一的服务器上  
+数据库设置仅允许特定IP来源的访问请求  
+1.GRANT ALL PRIVILEGES ON \*.* TO 'root'@'%' IDENTIFIED BY  
+'password' WITH GRANT OPTION; FLUSH PRIVILEGES;  
+2.my.cnf#bind-address = 127.0.0.1  
+设置防火墙，允许端口远程连接  
+iptables-A INPUT -ieth0 -p tcp-m tcp--dport3306 -j ACCEPT  
+
+
+- HDFS  
+Distributed, Scalable, Portable File System  
+Written in Java  
+Not fully POSIX-compliant  
+Replication: 3 copies by default  
+Designed for immutable files  
+Files are cached and chunked, chunk size 64MB  
+
+- HBASE  
+On top of HDFS  
+Column-oriented database  
+Can store huge size raw data  
+KEY-VALUE  
+
+- MongoDB   
+
+    RDBMS|MongoDB 
+-|-
+Database|Database 
+Table|Collection
+Tuple/Row|Document
+column|Field
+Table Join|Embedded Document
+Primary Key|Primary Key (Default by mongodb )  
+
+- Redis Overview  
+基于KEY VALUE模式的内存数据库  
+支持复杂的对象模型（MemoryCached仅支持少量类型）  
+支持Replication，实现集群（MemoryCached不支持分布式部署）  
+所有操作都是原子性（MemoryCached多数操作都不是原子的）  
+可以序列化到磁盘（MemoryCached不能序列化）  
+
 ```py
 # coding:utf-8
 import requests
