@@ -85,12 +85,12 @@ Link 外部链接
 
 - 分布式爬虫的重要性   
 解决目标地址对IP访问频率的限制  
-利用更高的带宽，提高下载速度  
-大规模系统的分布式存储和备份  
+利用更高的带宽，提高下载速度  
+大规模系统的分布式存储和备份  
 数据的扩展能力  
 
 - 将多进程爬虫部署到多台主机上  
-将数据库地址配置到统一的服务器上  
+将数据库地址配置到统一的服务器上  
 数据库设置仅允许特定IP来源的访问请求  
 1.GRANT ALL PRIVILEGES ON \*.* TO 'root'@'%' IDENTIFIED BY  
 'password' WITH GRANT OPTION; FLUSH PRIVILEGES;  
@@ -113,7 +113,7 @@ Column-oriented database
 Can store huge size raw data  
 KEY-VALUE  
 
-- MongoDB   
+- MongoDB  
 
     RDBMS|MongoDB 
 -|-
@@ -131,6 +131,91 @@ Primary Key|Primary Key (Default by mongodb )
 所有操作都是原子性（MemoryCached多数操作都不是原子的）  
 可以序列化到磁盘（MemoryCached不能序列化）  
 
+- Master-Slave 结构  
+有一个主机，对所有的服务器进行管理。绝大多数分布式系统，  
+都是Master-Slave的主从模式。而之前我们的爬虫，是完全独立的,  
+依次从url队列里获取url，进行抓取。  
+当爬虫服务器多的时候，必须能通过一个中心节点对从节点进行管理  
+能对整体的爬取进行控制 
+爬虫之间信息共享的桥梁  
+shutdown connection: server call close(), clietnrecv() returns 0  
+
+- Master及Slave工作  
+Master  
+1.管理爬虫  
+2.动态重拍  
+3.间隔地状态检查  
+Slave  
+1.注册  
+2.获取并执行命令  
+3.同步状态  
+4.爬取网页，保存到各个分布式数据库  
+
+- 结束服务器客户端通信  
+fixed length message: whiletotalsent< MSGLEN:  
+delimited: some message \0  
+indicates message length in beginning: LEN: 50;  
+shutdown connection: server call close(), clietnrecv() returns 0  
+
+- Log 系统基本用途  
+多线程情况下，debug调试非常困难  
+错误出现可能有一些随机性  
+性能分析
+错误记录与分析
+运行状态的实时监测  
+
+- PageRank 算法优缺点  
+优点：  
+一个与查询无关的静态算法，所有网页的PageRank值通过离线计  
+算获得；有效减少在线查询时的计算量，极大降低了查询响应时间。  
+缺点：  
+人们的查询具有主题特征，PageRank忽略了主题相关性，导致结  
+果的相关性和主题性降低。   
+旧的页面等级会比新页面高。因为即使是非常好的新页面也不会  
+有很多上游链接，除非它是某个站点的子站点。
+
+- 服务器处理Web请求流程  
+1.到达防火墙，对访问频次进行检查  
+2.根据端口映射，到达对应的服务，例如Apache  
+3.到达Apache，通过virtualhost 查找根目录  
+4.查找.htaccess伪静态设置，映射实际目录及文件  
+5.执行脚本或提取文件  
+6.确认cookie信息，查找用户  
+7.用户权限检查  
+8.执行命令，返回数据  
+
+- Virtual Host
+一台服务器主机可以处理多个域名或IP  
+将不同的域名及Ip映射到不同的网站根目录  
+不同的域名指向同一个服务器，更容易被服务器识别为爬虫（异常访问）而禁止  
+对于一个域名映射多台服务器的网站，在单机上不能并发抓取不同服务器的数据  
+
+- 网站如何发现爬虫？  
+单一IP非常规的访问频次  
+单一IP非常规的数据流量  
+大量重复简单的网站浏览行为  
+只下载网页，没有后续的js、css请求  
+通过一些陷阱来发现爬虫，例如一些通过CSS对用户隐藏的链接，只有爬虫才会访问  
+
+- 网站如何进行反爬  
+服务器日志分析  
+UserAgent  
+动态网页  
+基于流量  
+基于ip  
+iptables  
+
+好的规避反爬虫检查的方法  
+1.多主机策略  
+2.爬的慢一点，不要攻击主机，如果发现被阻止，立即降低访问频次，  
+设计得smart一点，来找到访问频次限制的临界点  
+3.通过变换IP或者代理服务器来掩饰  
+4.把爬虫放到访问频繁的主站IP的子网下，例如教育网  
+5.频繁改变自己的User-Agent  
+6.探测陷阱，比如nofollow的tag，或者display:none的CSS  
+7.如果使用了规则(pattern)来批量爬取，需要对规则进行组合  
+8.如果可能，按照Robots.txt定义的行为去文明抓取  
+
 ```py
 # coding:utf-8
 import requests
@@ -141,6 +226,8 @@ class DefaultSaxHandler(object):
     def __init__(self, provinces):
         self.provinces = provinces
 
+
+indicates message length in beginning: LEN: 50;  
     # 处理标签开始
     def start_element(self, name, attrs):
         if name != 'map':
@@ -393,7 +480,7 @@ demo.feed(open('test.html').read())
 demo.close()
 
 ```
-lxml,DOM选择器
+lxml包xpath
 ```py
 # coding:utf-8
 import lxml
