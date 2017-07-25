@@ -205,7 +205,7 @@ UserAgent
 基于ip  
 iptables  
 
-好的规避反爬虫检查的方法  
+- 好的规避反爬虫检查的方法  
 1.多主机策略  
 2.爬的慢一点，不要攻击主机，如果发现被阻止，立即降低访问频次，  
 设计得smart一点，来找到访问频次限制的临界点  
@@ -215,6 +215,33 @@ iptables
 6.探测陷阱，比如nofollow的tag，或者display:none的CSS  
 7.如果使用了规则(pattern)来批量爬取，需要对规则进行组合  
 8.如果可能，按照Robots.txt定义的行为去文明抓取  
+
+
+- 表单类型  
+form-data  
+http请求中的multipart/form-data，它会将表单的数据处理为一条消息，  
+以标签为单元，用分隔符分开。既可以上传键值对，也可以上传文件。当  
+上传的字段是文件时，会有Content-Type来表名文件类型。由于有boundary  
+隔离，所以multipart/form-data既可以上传文件，也可以上传键值对，它  
+采用了键值对的方式，所以可以上传多个文件。  
+-x-www-form-urlencoded  
+application/x-www-from-urlencoded，会将表单内的数据转换为键值对  
+
+- 登录  
+1.根据chrome inspector 里检查到的参数，来设置登录方式  
+最常用的是x-www-form-urlencoded和json方式，两种方式只是body编码不同  
+如果是form-data，按照form-data的方式组合body  
+body部分经常需要按照特定的方式编码，比如base64，或者md5  
+对于非常复杂的登录协议，利用第5章的动态网页方式登录  
+2.request = urllib2.Request(url, data, headers = loginheaders)  
+url是访问的地址  
+data 是body部分  
+headers = loginheaders是HTTP请求的HEADER数据  
+
+表单登录  
+见request_login.py  
+
+获取并设置Cookie登录成功后，HEADER会有设置cookie的相关信息  
 
 ```py
 # coding:utf-8
