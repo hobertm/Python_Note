@@ -238,10 +238,46 @@ url是访问的地址
 data 是body部分  
 headers = loginheaders是HTTP请求的HEADER数据  
 
+- 登录方式  
 表单登录  
 见request_login.py  
-
+获取并设置Cookie  
 获取并设置Cookie登录成功后，HEADER会有设置cookie的相关信息  
+此时我们需要把服务器返回的Cookie信息，写入到我们后续请求的  
+HEADER的Cookie里  
+- cookie意外  
+当遇到网页登录后，返回302跳转的情况下，urllib2的Response会  
+丢失Set-Cookie 的信息，导致登录不成功  
+更通常的情况下，我们需要一个通用的能处理Cookie的工具自动处理：  
+Set-Cookie请求  
+自动处理管理过期Cookie  
+自动在对应的域下发送特殊Cookie   
+解决方法：cookie jar  
+
+- Python Web  
+Selenium：一个自动化的Web测试工具，可以支持包括Firefox、chrome、  
+PhatomJS、IE等多种浏览器的连接与测试  
+PhantonJs：一个基于Webkit的Headless的Web引擎，支持JavaScript  
+
+- Useful Methods & Properties  
+Selenium 通过浏览器的驱动，支持大量的HTML及Javascript的操作，常用的可以包括：  
+page_source: 获取当前的html 文本  
+title：HTML的title  
+current_url：当前网页的URL  
+get_cookie()&get_cookies()：获取当前的cookie  
+delete_cookie() & delete_all_cookies()：删除所有的cookie  
+add_cookie()：添加一段cookie  
+set_page_load_timeout()：设置网页超时  
+execute_script()：同步执行一段javascript命令  
+execute_async_script()：异步执行javascript命令  
+ 
+- PhantomJS配置  
+ignore-ssl-errors=[true|false]  
+load-images=[true|false]  
+disk-cache=[true|false]  
+cookies-file=/path/to/cookies.txt  
+debug=[true|false]  
+config  
 
 ```py
 # coding:utf-8
