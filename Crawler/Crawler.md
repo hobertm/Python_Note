@@ -279,6 +279,41 @@ cookies-file=/path/to/cookies.txt
 debug=[true|false]  
 config  
 
+- 动态页面的抓取技巧  
+Javascript的执行是需要时间的，为了等待所有的内容都完成加载，  
+需要设置一个等待time.sleep()   
+使用--ignore-images=true来避免加载图片  
+每次初始化webdriver每次都会创建一个新的PhantomJS的进程，所以  
+webdriver是可以重用的，一个webdriverinstance 相当于一个chrome   
+的标签页，每次只需调用get(url)即可打开一个新的页面  
+PhantomJS运行需要占用比较多的系统资源，所以并发数需要视计算机  
+性能以及实际测试情况而定，建议不要设置太大  
+程序退出后，考虑调用shell来杀掉所有phantomjs进程  
+subprocess.call('pgrep phantomjs| xargs kill')    
+
+- Scrapy Core Features  
+模板化创建工程、启动爬虫的脚本  
+面向对象的编程模型  
+内容、数据抽取的各类接口  
+封装了Xpath及CSS选择器  
+一个shell的控制台(Ipythonaware），用来对下载的网页实验CSS 及Xpath表达式以进行数据提取及debug  
+可以将数据转化为JSONCSVXML等多种格式，并支持FTP/S3/Local FS 的存储  
+支持多种文本编码格式，并支持自动识别编码格式  
+强大的插件支持，可以自己挂载插件到Scray中来做功能增强  
+Telnet Console 进入到Pythonconsole来监控和调试爬虫  
+自动的图片异步下载  
+
+- Commands -genspider  
+genspider[-t template] <name> <domain>  
+在当前文件夹内，利用模板创建一个新的spider，或者在当前工程的spiders  
+文件夹里（参考startporject创建的工程的文件夹架构）创建一个新的spider  
+一个spider 就是继承了scrapy.Spider，并包含了start_url以及基本规则的python文件  
+Template:  
+basic 几乎空的spider，只下载domain，不保存不解析  
+crawl 创建基于scrapy.spiders.CrawlSpider对象的模板，定义了如何提取  
+link以及Items的信息，详情参考Items及样例spider rule  
+csvfeed创建包含了可以按行解析的模板pass row()  
+xmlfeed创建包含解析xml文件节点的模板parse node()  
 ```py
 # coding:utf-8
 import requests
