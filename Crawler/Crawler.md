@@ -314,6 +314,63 @@ crawl 创建基于scrapy.spiders.CrawlSpider对象的模板，定义了如何提
 link以及Items的信息，详情参考Items及样例spider rule  
 csvfeed创建包含了可以按行解析的模板pass row()  
 xmlfeed创建包含解析xml文件节点的模板parse node()  
+
+- Commands 运行
+scracpy runspider<spider-file>  
+运行一个已经存在的spider  
+scracpy crawl <spider-name>  
+运行一个已经存在的spider，通过spider 名字来运行  
+scracpy fetch url  
+下载一个网页并在命令行里输出，用于简单实验  
+--headers 打印HTTP的header  
+--spider=SPIDER 用指定的爬虫来运行，指定的爬虫的参数会覆盖默认参数，例如user-agent  
+scrapy bench  
+一个快速的benchmark测试，会显示下载流量、时间、响应数、内存消耗、responsecode等  
+
+- Spider work flow  
+1.start request() start urls: 指定开始抓取的网页  
+2.parse():网页下载完成后后，调用parse开始处理。parse可以同时返回解析后的数据，  
+比如dict，Items对象，同时也可以返回Request 对象。必须以yield 方式返回一个可以  
+遍历的对象。scrapy会根据返回的iterable里的对象的类型来处理，例如取到的如果是item，  
+会作为解析对象放回结果里；如果是Request，会放入scheduler，进入下载队列  
+3.对于解析出来的Items，可以通过Item Pipeline 写入数据库，或者Feed exports以JSON、XML等方式写入文件  
+
+- CrawlSpider 定义规则  
+针对一些通用的网页抓取所设计的基础类，提供了比较简单的方式来处理  
+外链以及定义一系列规则。通过scrapygenspider–t crawl 创建的Spider  
+会使用CrawlSpider的baseclass
+需要重写的方法及属性：  
+rule:定一个了抓取的规则，是一个元组，应用rule的优先级是按照rule在Rules元组的顺序来的  
+parse start url(response)：特定针对第一个网页的处理  
+
+- XMLFeed  
+直接抓取并分析xml文件，可以用于sitemap  
+iterator: iternodesxml html 三种方式来调用xpath或re 解析node  
+itertag：node 名称  
+parse node:解析回调  
+使用response.selector.remove namespaces()方法去除namespace，然后再使用xpath  
+例如response.xpath("//sitemap")   
+
+- File and Image Pipelines  
+Enabling your Media Pipeline  
+ITEM_PIPELINES = {'scrapy.pipelines.images.ImagesPipeline': 1}  
+Set the FILES_STORE or IMAGES_STOREsetting:FILES_STORE = '/path/to/valid/dir'  
+Items 里定义images_urls和images，这些field会被传入pipelines 处理  
+
+- 完整做一个scrapyspider 任务  
+1.scrapy start project chdemo创建新的工程  
+2.scrapygenspidermfwmafengwo.com创建mfw的spider  
+3.编辑Settings，设置ITEM_PIPELINES 以及IMAGES_STORE  
+4.scrapyshell http://www.mafengwo.cn/i/1082510.html 调试这个网页，重点测试xpath的选择  
+5.编辑spider/mfw.py设置start_url  
+6.修改parse文件  
+--yield iterable对象，用于提取  
+--提取外链yield Request  
+7.scrapy crawl mfw  
+
+
+
+
 ```py
 # coding:utf-8
 import requests
