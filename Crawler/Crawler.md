@@ -368,7 +368,17 @@ Items 里定义images_urls和images，这些field会被传入pipelines 处理
 --提取外链yield Request  
 7.scrapy crawl mfw  
 
-
+- 网页排重过程  
+1.建立10个分块存储区  
+2.计算一篇文章的SimHash，对于主题抓取，可以对特定主题词增加权重  
+simhash:分词、Hash、加权、合并、降维  
+3.把SimHash值分为16、12、12、12、12这样的5块，计算出10个组合  
+4.将这10个组合，分别插入到各自对应的分块中，通过二分法插入  
+5.重复2~4直到所有的文档都计算完SimHash并插入到索引表  
+6.扫描索引表，进行压缩，将每一个块的第一个SimHash保存到单独索引表  
+7.对于一个要检查的文档，计算SimHash，分块后计算出10个查找Key，通过  
+SimHash的block索引表，利用插补法进行查找，找到AB区相同的block  
+8.解压block，再一一比较计算海明距离，找出距离小于k的文档  
 
 
 ```py
