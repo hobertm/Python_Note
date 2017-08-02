@@ -381,6 +381,8 @@ SimHash的block索引表，利用插补法进行查找，找到AB区相同的blo
 8.解压block，再一一比较计算海明距离，找出距离小于k的文档  
 
 
+
+
 ```py
 # coding:utf-8
 import requests
